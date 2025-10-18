@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Report - Cement Dealer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2><i class="fas fa-user-circle"></i> Customer Report - {{ customer.name }}</h2>
+    
+    <div class="grid" style="margin-top: 1.5rem;">
+        <div class="stat-box info">
+            <h3><i class="fas fa-box"></i> Total Orders</h3>
+            <div class="number">{{ orders|length }}</div>
+        </div>
+        <div class="stat-box info">
+            <h3><i class="fas fa-shopping-cart"></i> Total Purchased</h3>
+            <div class="number" style="font-size: 1.5rem;">₺{{ "%.0f"|format(sum(order.total_amount for order in orders)) }}</div>
+        </div>
+        <div class="stat-box success">
+            <h3><i class="fas fa-check-circle"></i> Total Paid</h3>
+            <div class="number" style="font-size: 1.5rem;">₺{{ "%.0f"|format(sum(order.total_amount - order.remaining_amount for order in orders)) }}</div>
+        </div>
+        <div class="stat-box danger">
+            <h3><i class="fas fa-coins"></i> Total Pending</h3>
+            <div class="number" style="font-size: 1.5rem;">₺{{ "%.0f"|format(sum(order.remaining_amount for order in orders if order.remaining_amount > 0)) }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-receipt"></i> All Orders</h2>
+    
+    {% if orders %}
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Collected</th>
+                <th>Remaining</th>
+                <th>Date</th>
+                <th>Delivery</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td><strong>#{{ order.id }}</strong></td>
+                <td>{{ order.quantity }} tons</td>
+                <td><strong>₺{{ "%.2f"|format(order.total_amount) }}</strong></td>
+                <td>
+                    {% if order.status == 'pending' %}
+                    <span class="status-badge status-pending"><i class="fas fa-hourglass-half"></i> Pending</span>
+                    {% elif order.status == 'delivered' %}
+                    <span class="status-badge status-delivered"><i class="fas fa-check-circle"></i> Delivered</span>
+                    {% elif order.status == 'partially_paid' %}
+                    <span class="status-badge status-partially-paid"><i class="fas fa-half-circle"></i> Partial</span>
+                    {% elif order.status == 'paid' %}
+                    <span class="status-badge status-paid"><i class="fas fa-check-double"></i> Paid</span>
+                    {% endif %}
+                </td>
+                <td><strong style="color: var(--success);">₺{{ "%.2f"|format(order.total_amount - order.remaining_amount) }}</strong></td>
+                <td><strong style="color: var(--danger);">₺{{ "%.2f"|format(order.remaining_amount) }}</strong></td>
+                <td><small>{{ order.created_at.strftime('%Y-%m-%d') }}</small></td>
+                <td><small>{{ order.delivery_date.strftime('%Y-%m-%d') if order.delivery_date else '-' }}</small></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--gray); margin-top: 2rem; text-align: center; padding: 2rem;">
+        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.5;"></i><br>
+        No orders for this customer yet.
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

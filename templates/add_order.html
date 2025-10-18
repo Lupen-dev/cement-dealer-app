@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Add Order - Cement Dealer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2><i class="fas fa-plus-circle"></i> Create New Order</h2>
+    
+    <form method="POST" style="max-width: 800px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="form-group">
+                <label for="customer_id"><i class="fas fa-user-check"></i> Customer *</label>
+                <select id="customer_id" name="customer_id" required>
+                    <option value="">-- Select a customer --</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="quantity"><i class="fas fa-weight"></i> Quantity (tons) *</label>
+                <input type="number" id="quantity" name="quantity" step="0.01" required placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+                <label for="unit_price"><i class="fas fa-tag"></i> Unit Price (₺) *</label>
+                <input type="number" id="unit_price" name="unit_price" step="0.01" required placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+                <label for="total_amount"><i class="fas fa-calculator"></i> Total Amount (₺)</label>
+                <input type="number" id="total_amount" name="total_amount" step="0.01" readonly style="background-color: var(--light); cursor: not-allowed;">
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method_id"><i class="fas fa-credit-card"></i> Payment Method *</label>
+                <select id="payment_method_id" name="payment_method_id" required>
+                    <option value="">-- Select payment method --</option>
+                    {% for method in payment_methods %}
+                    <option value="{{ method.id }}">{{ method.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_term_id"><i class="fas fa-calendar-check"></i> Payment Term *</label>
+                <select id="payment_term_id" name="payment_term_id" required>
+                    <option value="">-- Select payment term --</option>
+                    {% for term in payment_terms %}
+                    <option value="{{ term.id }}">{{ term.name }} ({{ term.days }} days)</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="notes"><i class="fas fa-sticky-note"></i> Notes</label>
+            <textarea id="notes" name="notes" placeholder="Add any additional notes..."></textarea>
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Create Order</button>
+            <a href="{{ url_for('orders') }}" class="btn"><i class="fas fa-times"></i> Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const quantityInput = document.getElementById('quantity');
+    const unitPriceInput = document.getElementById('unit_price');
+    const totalAmountInput = document.getElementById('total_amount');
+    
+    function calculateTotal() {
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        const total = quantity * unitPrice;
+        totalAmountInput.value = total.toFixed(2);
+    }
+    
+    quantityInput.addEventListener('input', calculateTotal);
+    unitPriceInput.addEventListener('input', calculateTotal);
+</script>
+{% endblock %}

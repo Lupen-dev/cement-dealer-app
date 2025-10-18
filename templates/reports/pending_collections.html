@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Collections Report - Cement Dealer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2><i class="fas fa-exclamation-circle"></i> Pending Collections Report</h2>
+    
+    <div class="grid">
+        <div class="stat-box warning">
+            <h3><i class="fas fa-list-check"></i> Total Pending Orders</h3>
+            <div class="number">{{ pending_data|length }}</div>
+        </div>
+        <div class="stat-box danger">
+            <h3><i class="fas fa-coins"></i> Total Pending Amount</h3>
+            <div class="number">₺{{ "%.0f"|format(pending_data|map(attribute='order')|map(attribute='remaining_amount')|sum) }}</div>
+        </div>
+        <div class="stat-box" style="border-left-color: var(--danger);">
+            <h3><i class="fas fa-clock"></i> Overdue Orders</h3>
+            <div class="number" style="color: var(--danger);">{{ (pending_data|selectattr('days_overdue', '>', 0)|list)|length }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-table"></i> Detailed Pending Collections</h2>
+    
+    {% if pending_data %}
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total Amount</th>
+                <th>Collected</th>
+                <th>Remaining</th>
+                <th>Payment Term</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in pending_data %}
+            <tr>
+                <td><strong>#{{ item.order.id }}</strong></td>
+                <td>
+                    <a href="{{ url_for('customer_detail', customer_id=item.order.customer_id) }}" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                        {{ item.order.customer.name }}
+                    </a>
+                </td>
+                <td>₺{{ "%.2f"|format(item.order.total_amount) }}</td>
+                <td><strong style="color: var(--success);">₺{{ "%.2f"|format(item.order.total_amount - item.order.remaining_amount) }}</strong></td>
+                <td><strong style="color: var(--danger);">₺{{ "%.2f"|format(item.order.remaining_amount) }}</strong></td>
+                <td><small>{{ item.order.payment_term.name if item.order.payment_term else '-' }}</small></td>
+                <td><small>{{ item.due_date.strftime('%Y-%m-%d') if item.due_date else '-' }}</small></td>
+                <td>
+                    {% if item.days_overdue > 0 %}
+                    <span class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #7f1d1d;"><i class="fas fa-exclamation-triangle"></i> {{ item.days_overdue }}d overdue</span>
+                    {% else %}
+                    <span class="status-badge status-delivered"><i class="fas fa-check-circle"></i> On time</span>
+                    {% endif %}
+                </td>
+                <td><a href="{{ url_for('add_collection') }}?order_id={{ item.order.id }}" class="btn btn-warning" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;"><i class="fas fa-plus"></i></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--gray); margin-top: 2rem; text-align: center; padding: 3rem;">
+        <i class="fas fa-check-circle" style="font-size: 3rem; opacity: 0.5; color: var(--success);"></i><br>
+        <strong style="font-size: 1.25rem; margin-top: 1rem; display: block;">🎉 Great! All orders are paid or delivered.</strong>
+        <span style="font-size: 0.9375rem;">No pending collections.</span>
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

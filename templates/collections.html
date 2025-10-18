@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Collections - Cement Dealer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="header-actions">
+        <h2><i class="fas fa-hand-holding-usd"></i> Payment Collections Log</h2>
+        <a href="{{ url_for('add_collection') }}" class="btn btn-success"><i class="fas fa-plus"></i> Record Payment</a>
+    </div>
+    
+    {% if collections %}
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Date</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for collection in collections %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('order_detail', order_id=collection.order_id) }}" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                        #{{ collection.order_id }}
+                    </a>
+                </td>
+                <td>
+                    <a href="{{ url_for('customer_detail', customer_id=collection.customer_id) }}" style="color: var(--primary); text-decoration: none;">
+                        {{ collection.customer.name }}
+                    </a>
+                </td>
+                <td><strong style="color: var(--success);">₺{{ "%.2f"|format(collection.amount) }}</strong></td>
+                <td><span class="status-badge" style="background: rgba(139, 92, 246, 0.1); color: #6d28d9;"><i class="fas fa-credit-card"></i> {{ collection.payment_method.name if collection.payment_method else '-' }}</span></td>
+                <td><small>{{ collection.collection_date.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                <td>{{ collection.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--gray); margin-top: 2rem; text-align: center; padding: 2rem;">
+        <i class="fas fa-credit-card" style="font-size: 2rem; opacity: 0.5;"></i><br>
+        No payment collections recorded yet. <a href="{{ url_for('add_collection') }}" style="color: var(--primary); font-weight: 600;">Record your first payment</a>
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

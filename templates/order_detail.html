@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - Cement Dealer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="header-actions">
+        <h2><i class="fas fa-receipt"></i> Order #{{ order.id }}</h2>
+        <div>
+            {% if order.status == 'pending' and not order.delivery_date %}
+            <form method="POST" action="{{ url_for('deliver_order', order_id=order.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-success"><i class="fas fa-truck"></i> Mark as Delivered</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; background: var(--light); padding: 1.5rem; border-radius: 0.75rem;">
+        <!-- Order Details -->
+        <div>
+            <p style="color: var(--gray); font-size: 0.875rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-calendar"></i> Order Date</p>
+            <p style="font-size: 1.0625rem; font-weight: 500; margin-bottom: 1rem;">{{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
+            
+            <p style="color: var(--gray); font-size: 0.875rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-truck"></i> Delivery Date</p>
+            <p style="font-size: 1.0625rem; font-weight: 500; margin-bottom: 1rem;">{{ order.delivery_date.strftime('%Y-%m-%d') if order.delivery_date else '-' }}</p>
+            
+            <p style="color: var(--gray); font-size: 0.875rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> Status</p>
+            {% if order.status == 'pending' %}
+            <span class="status-badge status-pending"><i class="fas fa-hourglass-half"></i> Pending</span>
+            {% elif order.status == 'delivered' %}
+            <span class="status-badge status-delivered"><i class="fas fa-check-circle"></i> Delivered</span>
+            {% elif order.status == 'partially_paid' %}
+            <span class="status-badge status-partially-paid"><i class="fas fa-half-circle"></i> Partially Paid</span>
+            {% elif order.status == 'paid' %}
+            <span class="status-badge status-paid"><i class="fas fa-check-double"></i> Paid</span>
+            {% endif %}
+        </div>
+        
+        <!-- Customer Information -->
+        <div>
+            <p style="color: var(--gray); font-size: 0.875rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-user"></i> Customer</p>
+            <p style="font-size: 1.0625rem; font-weight: 500; margin-bottom: 1rem;">
+                <a href="{{ url_for('customer_detail', customer_id=order.customer_id) }}" style="color: var(--primary); text-decoration: none;">
+                    {{ order.customer.name }}
+                </a>
+            </p>
+            
+            <p style="color: var(--gray); font-size: 0.875rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;"><i class="fas fa-phone"></i> Phone</p>
+            <p style="font-size: 1.0625rem; font-weight: 500;">{{ order.customer.phone or '-' }}</p>
+        </div>
+    </div>
+    
+    <!-- Amount Summary -->
+    <div class="grid">
+        <div class="stat-box info">
+            <h3><i class="fas fa-weight"></i> Quantity</h3>
+            <div class="number" style="font-size: 1.75rem;">{{ order.quantity }}</div>
+            <p style="font-size: 0.875rem; margin-top: 0.5rem;">tons</p>
+        </div>
+        <div class="stat-box info">
+            <h3><i class="fas fa-tag"></i> Unit Price</h3>
+            <div class="number" style="font-size: 1.5rem;">₺{{ "%.0f"|format(order.unit_price) }}</div>
+        </div>
+        <div class="stat-box info">
+            <h3><i class="fas fa-calculator"></i> Total Amount</h3>
+            <div class="number" style="font-size: 1.5rem;">₺{{ "%.0f"|format(order.total_amount) }}</div>
+        </div>
+        <div class="stat-box" style="border-left: 4px solid {% if order.remaining_amount > 0 %}var(--danger){% else %}var(--success){% endif %};">
+            <h3><i class="fas fa-coins"></i> Remaining</h3>
+            <div class="number" style="font-size: 1.5rem; color: {% if order.remaining_amount > 0 %}var(--danger){% else %}var(--success){% endif %};">₺{{ "%.0f"|format(order.remaining_amount) }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Information -->
+<div class="card">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div>
+            <h3 style="margin-bottom: 1rem; color: var(--dark);"><i class="fas fa-credit-card"></i> Payment Method</h3>
+            <p style="font-size: 1.0625rem; font-weight: 500;">{{ order.payment_method.name if order.payment_method else '-' }}</p>
+            {% if order.payment_method %}
+            <p style="font-size: 0.875rem; color: var(--gray); margin-top: 0.5rem;">{{ order.payment_method.description }}</p>
+            {% endif %}
+        </div>
+        <div>
+            <h3 style="margin-bottom: 1rem; color: var(--dark);"><i class="fas fa-calendar-check"></i> Payment Term</h3>
+            <p style="font-size: 1.0625rem; font-weight: 500;">{{ order.payment_term.name if order.payment_term else '-' }}</p>
+            {% if order.payment_term %}
+            <p style="font-size: 0.875rem; color: var(--gray); margin-top: 0.5rem;">Due in {{ order.payment_term.days }} days</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Collections for this Order -->
+<div class="card">
+    <div class="header-actions">
+        <h2><i class="fas fa-hand-holding-usd"></i> Payment Collections</h2>
+        {% if not order.is_fully_paid %}
+        <a href="{{ url_for('add_collection') }}?order_id={{ order.id }}" class="btn btn-success"><i class="fas fa-plus"></i> Record Payment</a>
+        {% endif %}
+    </div>
+    
+    {% if order.collections %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for collection in order.collections %}
+            <tr>
+                <td><small>{{ collection.collection_date.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                <td><strong style="color: var(--success);">₺{{ "%.2f"|format(collection.amount) }}</strong></td>
+                <td><span class="status-badge" style="background: rgba(139, 92, 246, 0.1); color: #6d28d9;"><i class="fas fa-credit-card"></i> {{ collection.payment_method.name if collection.payment_method else '-' }}</span></td>
+                <td>{{ collection.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--gray); margin-top: 2rem; text-align: center; padding: 2rem;">
+        <i class="fas fa-credit-card" style="font-size: 2rem; opacity: 0.5;"></i><br>
+        No payments recorded yet. {% if not order.is_fully_paid %}<a href="{{ url_for('add_collection') }}?order_id={{ order.id }}" style="color: var(--primary); font-weight: 600;">Record a payment</a>{% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

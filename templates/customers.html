@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - Cement Dealer Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="header-actions">
+        <h2><i class="fas fa-users"></i> Customers List</h2>
+        <a href="{{ url_for('add_customer') }}" class="btn btn-success"><i class="fas fa-user-plus"></i> Add Customer</a>
+    </div>
+    
+    {% if customers %}
+    <table>
+        <thead>
+            <tr>
+                <th><i class="fas fa-user"></i> Name</th>
+                <th><i class="fas fa-phone"></i> Phone</th>
+                <th><i class="fas fa-envelope"></i> Email</th>
+                <th><i class="fas fa-map-pin"></i> Address</th>
+                <th><i class="fas fa-coins"></i> Pending</th>
+                <th><i class="fas fa-list"></i> Orders</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td><strong>{{ customer.name }}</strong></td>
+                <td>{{ customer.phone or '-' }}</td>
+                <td>{{ customer.email or '-' }}</td>
+                <td>{{ customer.address or '-' }}</td>
+                <td><strong style="color: var(--danger);">₺{{ "%.2f"|format(customer.total_pending_amount()) }}</strong></td>
+                <td><span class="status-badge" style="background: rgba(139, 92, 246, 0.1); color: #6d28d9;"><i class="fas fa-box"></i> {{ customer.orders|length }}</span></td>
+                <td>
+                    <div class="btn-group" style="gap: 0.25rem;">
+                        <a href="{{ url_for('customer_detail', customer_id=customer.id) }}" class="btn" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;"><i class="fas fa-eye"></i></a>
+                        <a href="{{ url_for('edit_customer', customer_id=customer.id) }}" class="btn btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;"><i class="fas fa-edit"></i></a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--gray); margin-top: 2rem; text-align: center; padding: 2rem;">
+        <i class="fas fa-user-slash" style="font-size: 2rem; opacity: 0.5;"></i><br>
+        No customers yet. <a href="{{ url_for('add_customer') }}" style="color: var(--primary); font-weight: 600;">Add your first customer</a>
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
